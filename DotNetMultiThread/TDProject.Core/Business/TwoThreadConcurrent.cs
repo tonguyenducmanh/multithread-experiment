@@ -82,15 +82,14 @@ public class TwoThreadConcurrentUsingList
     /// <summary>
     /// làm việc đa luồng
     /// </summary>
-    public void RunTask(int iterations)
+    public void RunTask(int iterations, int dbIdGenerateOneTime)
     {
         // giả lập trường hợp thêm 1 database nào list
         // sau đó 1 thread khác đọc list database và in ra màn hình
-        // dùng đệ quy để thấy 2 việc chạy song song với nhau
         for (int currentIteration = 0; currentIteration < iterations; currentIteration++)
         {
             TDLogger.LogRuntime($"Kiểu dữ liệu list - Bắt đầu đổ thêm data vào hàng đợi lần {currentIteration + 1}");
-            for (int dbIdCount = 0; dbIdCount < 3; dbIdCount++)
+            for (int dbIdCount = 0; dbIdCount < dbIdGenerateOneTime; dbIdCount++)
             {
                 // phải gọi lock thủ công
                 lock (_lockDatabaseObj)
@@ -181,15 +180,14 @@ public class TwoThreadConcurrentUsingConcurrentQueue
     /// <summary>
     /// làm việc đa luồng
     /// </summary>
-    public void RunTask(int iterations)
+    public void RunTask(int iterations, int dbIdGenerateOneTime)
     {
         // giả lập trường hợp thêm 1 database nào list
         // sau đó 1 thread khác đọc list database và in ra màn hình
-        // dùng đệ quy để thấy 2 việc chạy song song với nhau
         for (int currentIteration = 0; currentIteration < iterations; currentIteration++)
         {
             TDLogger.LogRuntime($"Kiểu dữ liệu list - Bắt đầu đổ thêm data vào hàng đợi lần {currentIteration + 1}");
-            for (int dbIdCount = 0; dbIdCount < 3; dbIdCount++)
+            for (int dbIdCount = 0; dbIdCount < dbIdGenerateOneTime; dbIdCount++)
             {
                 _concurrentQueueDBIds.Enqueue(Guid.NewGuid());
             }
