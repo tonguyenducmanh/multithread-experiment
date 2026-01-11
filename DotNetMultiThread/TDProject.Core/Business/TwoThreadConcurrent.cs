@@ -56,10 +56,10 @@ public class TwoThreadConcurrentUsingList
                         lock (_lockDatabaseObj)
                         {
                             Guid currentDB = _listDatabaseId[0];
-                            TDLogger.LogRuntime("Kiểu dữ liệu list - Bắt đầu chạy thread" + currentDB);
+                            TDLogger.LogRuntime("Kiểu dữ liệu list - Bắt đầu chạy " + currentDB);
                             TDSlowMethod.CPUBurnByTime(TimeSpan.FromSeconds(2));
                             _listDatabaseId.RemoveAt(0);
-                            TDLogger.LogRuntime("Kiểu dữ liệu list - Kết thúc chạy thread" + currentDB);
+                            TDLogger.LogRuntime("Kiểu dữ liệu list - Kết thúc chạy " + currentDB);
                         }
                     }
                     catch (Exception ex)
@@ -87,10 +87,10 @@ public class TwoThreadConcurrentUsingList
         // giả lập trường hợp thêm 1 database nào list
         // sau đó 1 thread khác đọc list database và in ra màn hình
         // dùng đệ quy để thấy 2 việc chạy song song với nhau
-        for (int k = 0; k < iterations; k++)
+        for (int currentIteration = 0; currentIteration < iterations; currentIteration++)
         {
-            TDLogger.LogRuntime($"Kiểu dữ liệu list - Bắt đầu đổ thêm data vào hàng đợi lần {k + 1}");
-            for (int i = 0; i < 3; i++)
+            TDLogger.LogRuntime($"Kiểu dữ liệu list - Bắt đầu đổ thêm data vào hàng đợi lần {currentIteration + 1}");
+            for (int dbIdCount = 0; dbIdCount < 3; dbIdCount++)
             {
                 // phải gọi lock thủ công
                 lock (_lockDatabaseObj)
@@ -99,8 +99,13 @@ public class TwoThreadConcurrentUsingList
                 }
             }
 
-            TDLogger.LogRuntime($"Kiểu dữ liệu list - Kết thúc đổ thêm data vào hàng đợi lần {k + 1}");
+            TDLogger.LogRuntime($"Kiểu dữ liệu list - Kết thúc đổ thêm data vào hàng đợi lần {currentIteration + 1}");
             DoSlowMethod();
+            TDSlowMethod.CPUBurnByTime(TimeSpan.FromSeconds(2));
+        }
+        while (_listDatabaseId.Count > 0)
+        {
+            // nếu còn đang xử lý thì chưa dừng thread chính để trace log
             TDSlowMethod.CPUBurnByTime(TimeSpan.FromSeconds(2));
         }
     }
@@ -152,9 +157,9 @@ public class TwoThreadConcurrentUsingConcurrentQueue
                     // luôn phải có try catch khi làm việc đa luồng
                     try
                     {
-                        TDLogger.LogRuntime("Kiểu dữ liệu concurrent - Bắt đầu chạy thread" + currentDB);
+                        TDLogger.LogRuntime("Kiểu dữ liệu concurrent - Bắt đầu chạy " + currentDB);
                         TDSlowMethod.CPUBurnByTime(TimeSpan.FromSeconds(2));
-                        TDLogger.LogRuntime("Kiểu dữ liệu concurrent - Kết thúc chạy thread" + currentDB);
+                        TDLogger.LogRuntime("Kiểu dữ liệu concurrent - Kết thúc chạy " + currentDB);
                     }
                     catch (Exception ex)
                     {
@@ -181,16 +186,22 @@ public class TwoThreadConcurrentUsingConcurrentQueue
         // giả lập trường hợp thêm 1 database nào list
         // sau đó 1 thread khác đọc list database và in ra màn hình
         // dùng đệ quy để thấy 2 việc chạy song song với nhau
-        for (int k = 0; k < iterations; k++)
+        for (int currentIteration = 0; currentIteration < iterations; currentIteration++)
         {
-            TDLogger.LogRuntime($"Kiểu dữ liệu list - Bắt đầu đổ thêm data vào hàng đợi lần {k + 1}");
-            for (int i = 0; i < 3; i++)
+            TDLogger.LogRuntime($"Kiểu dữ liệu list - Bắt đầu đổ thêm data vào hàng đợi lần {currentIteration + 1}");
+            for (int dbIdCount = 0; dbIdCount < 3; dbIdCount++)
             {
                 _concurrentQueueDBIds.Enqueue(Guid.NewGuid());
             }
 
-            TDLogger.LogRuntime($"Kiểu dữ liệu list - Kết thúc đổ thêm data vào hàng đợi lần {k + 1}");
+            TDLogger.LogRuntime($"Kiểu dữ liệu list - Kết thúc đổ thêm data vào hàng đợi lần {currentIteration + 1}");
             DoSlowMethod();
+            TDSlowMethod.CPUBurnByTime(TimeSpan.FromSeconds(2));
+        }
+        
+        while (_concurrentQueueDBIds.Count > 0)
+        {
+            // nếu còn đang xử lý thì chưa dừng thread chính để trace log
             TDSlowMethod.CPUBurnByTime(TimeSpan.FromSeconds(2));
         }
     }
