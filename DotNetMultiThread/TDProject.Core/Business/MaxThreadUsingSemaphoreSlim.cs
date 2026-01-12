@@ -1,0 +1,135 @@
+// Xử lý tối đa n thread tại 1 thời điểm, nếu số thread đã đạt tới mức tối đa
+// Sẽ phải đợi có ít nhất 1 thread rảnh rỗi để tiếp tục làm việc
+
+using System.Collections.Concurrent;
+using TDProject.Core.Utility;
+
+namespace TDProject.Core.Business;
+
+/// <summary>
+/// Chạy max thread sử dụng SemaphoreSlim
+/// </summary>
+public class MaxThreadUsingSemaphoreSlim
+{
+    #region Declare
+
+    /// <summary>
+    /// danh sách database id đang chờ xử lý
+    /// </summary>
+    private ConcurrentQueue<Guid> _concurrentQueueDBIds = new ConcurrentQueue<Guid>();
+
+    /// <summary>
+    /// Semaphore để giới hạn số lượng thread chạy đồng thời
+    /// </summary>
+    private SemaphoreSlim _semaphore;
+
+    /// <summary>
+    /// Số lượng thread tối đa được phép chạy đồng thời
+    /// </summary>
+    private int _maxThreadCount;
+
+    /// <summary>
+    /// Danh sách các task đang chạy để theo dõi
+    /// </summary>
+    private ConcurrentBag<Task> _runningTasks = new ConcurrentBag<Task>();
+
+    #endregion
+
+    #region Constructor
+
+    /// <summary>
+    /// Khởi tạo với số thread tối đa
+    /// </summary>
+    /// <param name="maxThreadCount">Số lượng thread tối đa (mặc định = 3)</param>
+    public MaxThreadUsingSemaphoreSlim(int maxThreadCount = 3)
+    {
+        _maxThreadCount = maxThreadCount;
+        _semaphore = new SemaphoreSlim(maxThreadCount, maxThreadCount);
+    }
+
+    #endregion
+
+    #region Methods
+
+    private void DoSlowMethod(Guid dbId)
+    {
+        Task task = Task.Run(async () =>
+        {
+            // Đợi để có slot trống (nếu đã đủ max thread)
+            await _semaphore.WaitAsync();
+
+            try
+            {
+                TDLogger.LogRuntime($"Semaphore - Bắt đầu xử lý {dbId} (Thread: {Thread.CurrentThread.ManagedThreadId})");
+                TDSlowMethod.CPUBurnByTime(TimeSpan.FromSeconds(2));
+                TDLogger.LogRuntime($"Semaphore - Kết thúc xử lý {dbId} (Thread: {Thread.CurrentThread.ManagedThreadId})");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{this.GetType()} {nameof(DoSlowMethod)} - {dbId}: {ex}");
+            }
+            finally
+            {
+                // Release semaphore để thread khác có thể chạy
+                _semaphore.Release();
+            }
+        });
+
+        _runningTasks.Add(task);
+    }
+
+    /// <summary>
+    /// Xử lý tất cả items trong queue
+    /// </summary>
+    private void ProcessQueue()
+    {
+        while (_concurrentQueueDBIds.TryDequeue(out Guid currentDB))
+        {
+            DoSlowMethod(currentDB);
+        }
+    }
+
+    /// <summary>
+    /// Làm việc đa luồng với giới hạn số thread
+    /// </summary>
+    public void RunTask(int iterations, int dbIdGenerateOneTime)
+    {
+        // Giả lập trường hợp thêm database vào queue
+        // Các thread sẽ được giới hạn bởi semaphore
+        for (int currentIteration = 0; currentIteration < iterations; currentIteration++)
+        {
+            TDLogger.LogRuntime($"Semaphore - Bắt đầu đổ thêm data vào hàng đợi lần {currentIteration + 1}");
+            
+            for (int dbIdCount = 0; dbIdCount < dbIdGenerateOneTime; dbIdCount++)
+            {
+                _concurrentQueueDBIds.Enqueue(Guid.NewGuid());
+            }
+
+            TDLogger.LogRuntime($"Semaphore - Kết thúc đổ thêm data vào hàng đợi lần {currentIteration + 1} (Tổng trong queue: {_concurrentQueueDBIds.Count})");
+            
+            // Xử lý queue
+            ProcessQueue();
+            
+            TDSlowMethod.CPUBurnByTime(TimeSpan.FromSeconds(2));
+        }
+
+        // Đợi tất cả task hoàn thành
+        TDLogger.LogRuntime("Semaphore - Đang đợi tất cả task hoàn thành...");
+        Task.WaitAll(_runningTasks.ToArray());
+        TDLogger.LogRuntime("Semaphore - Hoàn thành tất cả task!");
+    }
+
+    #endregion
+
+    #region Dispose
+
+    /// <summary>
+    /// Giải phóng tài nguyên
+    /// </summary>
+    public void Dispose()
+    {
+        _semaphore?.Dispose();
+    }
+
+    #endregion
+}

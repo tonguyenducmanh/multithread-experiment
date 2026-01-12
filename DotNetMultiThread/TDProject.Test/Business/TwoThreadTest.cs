@@ -5,7 +5,7 @@ using TDProject.Core.Business;
 
 namespace TDProject.Test.Business;
 
-public class TwoThreadConcurrentTest
+public class TwoThreadTest
 {
     /// <summary>
     /// Test chạy 2 luồng song song bằng kiểu dữ liệu list
