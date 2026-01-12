@@ -20,4 +20,16 @@ public class MaxThreadTest
         testObject.Dispose();
         Assert.Null(exeption);
     }
+    
+    /// <summary>
+    /// Test chạy n thread tối đa bằng Task.WhenAny
+    /// </summary>
+    [Fact]
+    public async Task MaxThreadUsingTaskWhenAny_TestRunConcurrent()
+    {
+        MaxThreadUsingTaskWhenAny testObject = new MaxThreadUsingTaskWhenAny();
+        var exeption = await Record.ExceptionAsync(async () => {await testObject.RunTask(4, 3);});
+        // dọn dẹp bộ nhớ
+        Assert.Null(exeption);
+    }
 }
