@@ -16,6 +16,8 @@ public class MaxThreadUsingTaskWhenAny
     /// <summary>
     /// danh sách database id đang chờ xử lý
     /// </summary>
+    /// nếu muốn có thể sử dụng kiểu dữ liệu khác thay cho Guid,
+    /// ví dụ Guid[] hoặc class cụ thể để chứa data
     private ConcurrentQueue<Guid> _concurrentQueueDBIds = new ConcurrentQueue<Guid>();
 
     /// <summary>
