@@ -13,7 +13,7 @@ public class TwoThreadConcurrentTest
     [Fact]
     public void TwoThreadConcurrentUsingList_TestRunConcurrent()
     {
-        TwoThreadConcurrentUsingList testObject = new TwoThreadConcurrentUsingList();
+        TwoThreadUsingList testObject = new TwoThreadUsingList();
         var exeption = Record.Exception(() => { testObject.RunTask(4, 3);});
         Assert.Null(exeption);
     }
@@ -24,7 +24,7 @@ public class TwoThreadConcurrentTest
     [Fact]
     public void TwoThreadConcurrentUsingConcurrent_TestRunConcurrent()
     {
-        TwoThreadConcurrentUsingConcurrentQueue testObject = new TwoThreadConcurrentUsingConcurrentQueue();
+        TwoThreadUsingConcurrentQueue testObject = new TwoThreadUsingConcurrentQueue();
         var exeption = Record.Exception(() => { testObject.RunTask(4, 3);});
         Assert.Null(exeption);
     }
