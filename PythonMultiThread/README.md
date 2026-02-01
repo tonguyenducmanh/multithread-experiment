@@ -1,6 +1,4 @@
-## Project test việc chạy đa luồng ở 1 số ngôn ngữ lập trình
-
-ví dụ với python
+# Project test việc xử lý đa luồng trong python
 
 tạo env
 
